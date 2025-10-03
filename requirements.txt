@@ -1,0 +1,8 @@
+Flask
+python-dotenv
+Pillow
+pytesseract
+google-generativeai
+mistralai
+huggingface_hub
+openai
