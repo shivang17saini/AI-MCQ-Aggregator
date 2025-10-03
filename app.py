@@ -485,14 +485,5 @@ def internal_error(error):
 
 # --- Main ---
 if __name__ == '__main__':
-    logger.info("Starting AI MCQ Aggregator")
-    logger.info(f"Model timeout: {MODEL_TIMEOUT} seconds")
-    
-    logger.info("\n=== Available AI Models ===")
-    if os.getenv("GOOGLE_API_KEY"):
-        logger.info("[OK] Google Gemini")
-    if openrouter_client:
-        logger.info("[OK] OpenRouter")
-    logger.info("=" * 30 + "\n")
-    
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
