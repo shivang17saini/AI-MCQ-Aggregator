@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI MCQ Aggregator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 500px;
+            min-height: 100vh;
+            gap: 0;
+        }
+
+        .left-panel {
+            padding: 40px;
+            background: #1a1a1a;
+            overflow-y: auto;
+        }
+
+        .right-panel {
+            background: #2d2d2d;
+            padding: 40px;
+            border-left: 1px solid #3d3d3d;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: #a0a0a0;
+            font-size: 1em;
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #4ade80;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .paste-area {
+            width: 100%;
+            min-height: 180px;
+            padding: 20px;
+            background: #3d3d3d;
+            border: 2px solid #4d4d4d;
+            border-radius: 8px;
+            font-size: 15px;
+            color: #e0e0e0;
+            resize: vertical;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        .paste-area::placeholder {
+            color: #808080;
+        }
+
+        .paste-area:focus {
+            outline: none;
+            border-color: #4ade80;
+        }
+
+        .paste-area.has-image {
+            border-color: #4ade80;
+            background-color: #2d3d2d;
+        }
+
+        .image-preview-container {
+            margin-top: 15px;
+            display: none;
+        }
+
+        .image-preview-container.show {
+            display: block;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            border: 2px solid #4d4d4d;
+        }
+
+        .clear-btn {
+            background: #ef4444;
+            padding: 8px 16px;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .clear-btn:hover {
+            background: #dc2626;
+        }
+
+        .helper-text {
+            color: #808080;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 25px 0;
+            color: #808080;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            background: #3d3d3d;
+            border: 2px dashed #4d4d4d;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #a0a0a0;
+        }
+
+        .file-input-label:hover {
+            background: #4d4d4d;
+            border-color: #5d5d5d;
+        }
+
+        .file-name {
+            font-size: 14px;
+            color: #808080;
+            margin-top: 5px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #000000;
+            background: #4ade80;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            background: #22c55e;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .results-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .model-card {
+            background: #2d2d2d;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #3d3d3d;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .model-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .model-name {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .copy-btn {
+            padding: 8px 16px;
+            background: #4ade80;
+            color: #000000;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #22c55e;
+        }
+
+        .model-answer {
+            color: #b0b0b0;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            font-size: 14px;
+        }
+
+        .duration {
+            text-align: right;
+            margin-top: 12px;
+            color: #808080;
+            font-size: 13px;
+        }
+
+        .loading {
+            text-align: center;
+            color: #a0a0a0;
+            padding: 40px 0;
+        }
+
+        .spinner {
+            border: 3px solid #3d3d3d;
+            border-radius: 50%;
+            border-top: 3px solid #4ade80;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .consensus-section {
+            background: #2d2d2d;
+            border-radius: 12px;
+            padding: 30px;
+            border: 1px solid #3d3d3d;
+            margin-bottom: 30px;
+        }
+
+        .consensus-title {
+            font-size: 1.5em;
+            color: #4ade80;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .question-result {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #3d3d3d;
+            border-radius: 8px;
+        }
+
+        .question-number {
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 15px;
+            font-size: 1.05em;
+        }
+
+        .option-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .option-label {
+            min-width: 40px;
+            font-weight: 600;
+            color: #e0e0e0;
+        }
+
+        .bar-container {
+            flex: 1;
+            height: 32px;
+            background: #2d2d2d;
+            border-radius: 6px;
+            margin: 0 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar {
+            height: 100%;
+            background: #4ade80;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+        }
+
+        .percentage {
+            color: #000000;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .error {
+            color: #ef4444;
+            background: #2d1d1d;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 1px solid #4d2d2d;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #808080;
+        }
+
+        .empty-state-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .right-panel {
+                border-left: none;
+                border-top: 1px solid #3d3d3d;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <h1>AI MCQ Aggregator</h1>
+            <p class="subtitle">Paste a question or upload a screenshot to get answers from multiple AI models.</p>
+            
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                Analyzing with multiple AI models...
+            </div>
+            
+            <div id="consensus" class="consensus-section" style="display: none;">
+                <h2 class="consensus-title">Consensus</h2>
+                <div id="consensusContent"></div>
+            </div>
+            
+            <h2 class="section-title">Detailed Answers</h2>
+            
+            <div id="results" class="results-section">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📝</div>
+                    <p>Enter a question to see AI responses here</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <div>
+                <textarea 
+                    id="pasteArea" 
+                    class="paste-area" 
+                    placeholder="Paste your question and options here..."
+                ></textarea>
+                
+                <div id="imagePreviewContainer" class="image-preview-container">
+                    <img id="imagePreview" class="image-preview" alt="Preview">
+                    <button id="clearImage" class="clear-btn">Clear Image</button>
+                </div>
+                
+                <div class="helper-text">💡 Tip: You can paste images directly with Ctrl+V or Cmd+V</div>
+            </div>
+            
+            <div class="divider">OR</div>
+            
+            <div class="file-input-wrapper">
+                <input type="file" id="imageInput" accept="image/*">
+                <label for="imageInput" class="file-input-label">
+                    Choose File
+                </label>
+                <div id="fileName" class="file-name">No file chosen</div>
+            </div>
+            
+            <button id="analyzeBtn" class="btn">Analyze</button>
+        </div>
+    </div>
+
+    <script>
+        const pasteArea = document.getElementById('pasteArea');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+        const imagePreview = document.getElementById('imagePreview');
+        const clearImageBtn = document.getElementById('clearImage');
+        const imageInput = document.getElementById('imageInput');
+        const fileName = document.getElementById('fileName');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const consensus = document.getElementById('consensus');
+        const consensusContent = document.getElementById('consensusContent');
+        
+        let pastedImageData = null;
+
+        // Handle paste event for images
+        pasteArea.addEventListener('paste', (e) => {
+            const items = e.clipboardData.items;
+            
+            for (let item of items) {
+                if (item.type.indexOf('image') !== -1) {
+                    e.preventDefault();
+                    const blob = item.getAsFile();
+                    const reader = new FileReader();
+                    
+                    reader.onload = (event) => {
+                        pastedImageData = event.target.result;
+                        imagePreview.src = pastedImageData;
+                        imagePreviewContainer.classList.add('show');
+                        pasteArea.classList.add('has-image');
+                        pasteArea.value = '';
+                        pasteArea.placeholder = '✓ Image pasted successfully';
+                    };
+                    
+                    reader.readAsDataURL(blob);
+                    break;
+                }
+            }
+        });
+
+        // Clear pasted image
+        clearImageBtn.addEventListener('click', () => {
+            pastedImageData = null;
+            imagePreviewContainer.classList.remove('show');
+            pasteArea.classList.remove('has-image');
+            pasteArea.placeholder = 'Paste your question and options here...';
+        });
+
+        // File input change
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                fileName.textContent = file.name;
+            } else {
+                fileName.textContent = 'No file chosen';
+            }
+        });
+
+        // Analyze button
+        analyzeBtn.addEventListener('click', async () => {
+            const text = pasteArea.value.trim();
+            const file = imageInput.files[0];
+            
+            if (!text && !file && !pastedImageData) {
+                alert('Please provide a question (text or image)');
+                return;
+            }
+            
+            // Clear previous results
+            results.innerHTML = '';
+            consensus.style.display = 'none';
+            consensusContent.innerHTML = '';
+            loading.style.display = 'block';
+            analyzeBtn.disabled = true;
+            
+            const formData = new FormData();
+            
+            if (pastedImageData) {
+                formData.append('image_data', pastedImageData);
+            } else if (file) {
+                formData.append('image', file);
+            } else if (text) {
+                formData.append('text', text);
+            }
+            
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                
+                while (true) {
+                    const {done, value} = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+                    
+                    for (let line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = JSON.parse(line.slice(6));
+                            
+                            if (data.type === 'model_result') {
+                                addModelResult(data.data);
+                            } else if (data.type === 'consensus_result') {
+                                showConsensus(data.data);
+                            } else if (data.type === 'done') {
+                                loading.style.display = 'none';
+                                analyzeBtn.disabled = false;
+                            } else if (data.type === 'error') {
+                                showError(data.data.message);
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Failed to analyze. Please try again.');
+                loading.style.display = 'none';
+                analyzeBtn.disabled = false;
+            }
+        });
+
+        function addModelResult(data) {
+            const card = document.createElement('div');
+            card.className = 'model-card';
+            
+            const answer = data.answer || 'No response';
+            const duration = data.duration ? `${data.duration.toFixed(2)}s` : 'N/A';
+            
+            card.innerHTML = `
+                <div class="model-header">
+                    <div class="model-name">${data.model}</div>
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+                </div>
+                <div class="model-answer">${answer}</div>
+                <div class="duration">⏱ ${duration}</div>
+            `;
+            
+            results.appendChild(card);
+        }
+
+        function showConsensus(data) {
+            if (data.length === 0) return;
+            
+            consensus.style.display = 'block';
+            consensusContent.innerHTML = '';
+            
+            data.forEach(q => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-result';
+                
+                let html = `<div class="question-number">Question ${q.question}</div>`;
+                
+                const options = ['A', 'B', 'C', 'D'];
+                options.forEach(option => {
+                    const percentage = q.votes[option] || '0%';
+                    const width = parseInt(percentage);
+                    
+                    html += `
+                        <div class="option-bar">
+                            <div class="option-label">${option}:</div>
+                            <div class="bar-container">
+                                <div class="bar" style="width: ${width}%;">
+                                    <span class="percentage">${percentage}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                questionDiv.innerHTML = html;
+                consensusContent.appendChild(questionDiv);
+            });
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            results.insertBefore(errorDiv, results.firstChild);
+        }
+
+        function copyToClipboard(btn) {
+            const answer = btn.closest('.model-card').querySelector('.model-answer').textContent;
+            navigator.clipboard.writeText(answer).then(() => {
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
