@@ -6,3 +6,4 @@ google-generativeai
 mistralai
 huggingface_hub
 openai
+gunicorn
